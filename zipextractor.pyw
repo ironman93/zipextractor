@@ -1,4 +1,4 @@
-import os, zipfile, time, configparser
+import os, zipfile, time, configparser, sys
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
@@ -8,11 +8,18 @@ config_file_name = 'config.ini'
 if not os.path.exists(config_file_name): #if the configfile doesn't exist then create one
     with open(config_file_name, 'w') as configfile:
         config['DEFAULT'] = {'Where_you_put_your_zipped_files': 'any_directory',
-            'Where_they_go_after_unzipping': 'any_other_directory'}
+            'Where_they_go_after_unzipping': 'any_other_directory',
+            'linux_or_windows_or_macos': ''}
         config.write(configfile)
 
 config.read(config_file_name)
 
+if config['DEFAULT']['linux_or_windows_or_macos'] == 'linux':
+    separator = '/'
+elif config['DEFAULT']['linux_or_windows_or_macos'] == 'macos':
+    separator = '/'
+elif config['DEFAULT']['linux_or_windows_or_macos'] == 'windows':
+    separator = '\\'
 zip_dir = config['DEFAULT']['Where_you_put_your_zipped_files']
 unzip_dir = config['DEFAULT']['Where_they_go_after_unzipping']
 extension = ".zip"
@@ -24,6 +31,12 @@ def createFolder(directory):#creates folder in directory if it doesnot exist
     except OSError:
         print ('Error: Creating directory. ' +  directory)
 
+if os.path.isdir(zip_dir) == False:
+    sys.exit('You have to put in a valid path for the zipped files')
+
+if os.path.isdir(unzip_dir) == False:
+    sys.exit('You have to put in a valid path for the unzipped files')
+
 os.chdir(zip_dir) # change directory from working dir to dir with files
 
 def unzipall():#unzips all the items in zip_dir
@@ -31,7 +44,7 @@ def unzipall():#unzips all the items in zip_dir
         if item.endswith(extension): # check for ".zip" extension
             file_path = os.path.abspath(item) # get full path of files
             file_name = os.path.basename(os.path.splitext(file_path)[0])#removing the .zip extension and the path to the .zip file, so file_name is just the name of the folder
-            folder_directory = unzip_dir + '\\' + file_name + '\\' #creating the name of the aim directory
+            folder_directory = unzip_dir + separator + file_name + separator #creating the name of the aim directory
             createFolder(folder_directory)#create a subfolder that is named after the zip file
             copying = True
             size2 = -1
@@ -82,10 +95,9 @@ if __name__ == "__main__":
     my_event_handler.on_modified = on_modified
     my_event_handler.on_moved = on_moved
 
-    path = 'C:\\Users\\finns\\Downloads\\zip'
     go_recursively = True
     my_observer = Observer()
-    my_observer.schedule(my_event_handler, path, recursive=go_recursively)
+    my_observer.schedule(my_event_handler, zip_dir, recursive=go_recursively)
 
     my_observer.start()
     try:
