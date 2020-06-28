@@ -1,9 +1,21 @@
-import os, zipfile, time, configparser, sys
-from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
+import sys, subprocess, configparser, os, time
 
 config = configparser.ConfigParser()
 config_file_name = 'config.ini'
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+if not os.path.exists(config_file_name):
+    install('zipp')
+    install('watchdog')
+
+
+import zipfile
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
+
+
 
 if not os.path.exists(config_file_name): #if the configfile doesn't exist then create one
     with open(config_file_name, 'w') as configfile:
@@ -60,10 +72,6 @@ def unzipall():#unzips all the items in zip_dir
             zip_ref.extractall(folder_directory) # extract file to dir
             zip_ref.close() # close file
             os.remove(file_path) # delete zipped file
-
-
-unzipall()
-
 
 
 if __name__ == "__main__":
